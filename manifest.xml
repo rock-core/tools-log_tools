@@ -1,0 +1,16 @@
+<package>
+    <description brief="ruby library for data post processing">
+        This library allows to post proecess log data (updating log files,...).  
+    </description>
+    <author>Alexander.Duda@dfki.de</author>
+    <copyright>
+        DFKI/robotik@dfki.de
+        Alexander Duda/alexander.duda@dfki,de
+    </copyright>
+    <license>GPL v2 or later</license>
+    <url>http://rock-robotics.org</url>
+
+    <depend package="orogen" />
+    <depend package="tools/pocolog" />
+</package>
+
