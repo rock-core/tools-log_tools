@@ -17,7 +17,7 @@ module Kernel
 end
 
 module LogTools
-    extend Logger::Root('Converter', Logger::INFO)
+    extend Logger::Root('LogTools', Logger::INFO)
 
     class TypeConverter 
         attr_reader :time_from,:new_registry,:name
