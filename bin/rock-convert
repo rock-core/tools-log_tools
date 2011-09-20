@@ -1,0 +1,58 @@
+#! /usr/bin/env ruby
+
+require 'optparse'
+require 'log_tools/converter.rb'
+
+Orocos.initialize
+
+#load all conversions
+require_dir File.join(ENV['ROCK_PREFIX'],'log','migration') if ENV['ROCK_PREFIX']
+
+include LogTools
+Converter.logger.level = Logger::INFO
+converter = Converter.new
+converter.post_fix = ""
+converter.output_folder = "updated"
+parser = OptionParser.new do |opt|
+    opt.banner = <<-EOT
+
+usage: rock-convert <log file>
+    
+    Updates log files which contain base/types to the current base/types version. 
+    It can also be used to update log files with custom types if the conversion between
+    the old and new type is unambiguous (field, enum value was added...).
+
+    All files are stored by default in a subfolder called 'updated'.
+
+Examples:
+ rock-convert logfile.0.log 
+    EOT
+
+    opt.on('--help') do
+        puts self
+        exit 0
+    end
+    opt.on('-p', '--postfix POSTFIX', 'Postfix which is added to the input file name to produce the output file name.') do |p|
+        converter.post_fix = p
+    end
+
+    opt.on('-o', '--output OUTPUT', 'Output folder where the converterted log files are saved.') do |o|
+        converter.output_folder = o
+    end
+
+    opt.on('--debug') do
+        Converter.logger.level = Logger::DEBUG
+    end
+end
+
+remaining = parser.parse(ARGV)
+if remaining.empty?
+    puts parser
+    exit(1)
+end
+
+time = Time.now
+converter.convert remaining
+puts 
+puts "all done in #{Time.now-time} seconds!"
+puts 
