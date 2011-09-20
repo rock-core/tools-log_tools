@@ -21,14 +21,16 @@ parser = OptionParser.new do |opt|
 
 usage: rock-convert <log file>
     
-    Updates log files which contain base/types to the current base/types version. 
-    It can also be used to update log files with custom types if the conversion between
-    the old and new type is unambiguous (field, enum value was added...).
+    Updates log files containing base/types to the current version. 
+    It can also be used to update log files containing custom types if 
+    the conversion between the old and the new type is unambiguous 
+    (field, enum value was added...).
 
     All files are stored by default in a subfolder called 'updated'.
 
 Examples:
  rock-convert logfile.0.log 
+
     EOT
 
     opt.on('--help') do
