@@ -6,7 +6,10 @@ require 'log_tools/converter.rb'
 Orocos.initialize
 
 #load all conversions
-require_dir File.join(ENV['ROCK_PREFIX'],'log','migration') if ENV['ROCK_PREFIX']
+if ENV['ROCK_PREFIX']
+    path = File.join(ENV['ROCK_PREFIX'],'log','migration') 
+    require_dir path if File.directory? path
+end
 
 include LogTools
 Converter.logger.level = Logger::INFO
