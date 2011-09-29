@@ -231,6 +231,9 @@ module LogTools
                     deep_cast(new_sample,sample)
                     sample = new_sample
                 end
+            else
+                #this can be removed later if typelib is supporting daisy chain 
+                @current_registry = nil         # we have to convert it via deep_cast
             end
 
             #this is needed to be sure that the version is compatible to the
