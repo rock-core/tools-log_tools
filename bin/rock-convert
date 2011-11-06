@@ -45,6 +45,27 @@ Examples:
         converter.output_folder = o
     end
 
+    opt.on('-s', '--streams STREAMS', 'Stream names which shall be converted. If not given all streams are selected') do |s,streams|
+        converter.streams = s
+    end
+
+    opt.on('--from TIME', 'Ignores all samples which were recorded before the given time (yyyy/mm/dd hh:mm:ss)') do |from|
+        if from =~ /(....)\/(..)\/(..) (..)\:(..)\:(..)/
+          converter.from = Time.local($1,$2,$3,$4,$5,$6)
+          puts converter.from
+        else
+          raise "Time format from is wrong"
+        end
+    end
+
+    opt.on('--to TIME', 'Ignores all samples which were recorded after the given time (yyyy/mm/dd hh:mm:ss)') do |to|
+        if to =~ /(....)\/(..)\/(..) (..)\:(..)\:(..)/
+          converter.to = Time.local($1,$2,$3,$4,$5,$6)
+        else
+          raise "Time format to is wrong"
+        end
+    end
+
     opt.on('--debug') do
         Converter.logger.level = Logger::DEBUG
     end

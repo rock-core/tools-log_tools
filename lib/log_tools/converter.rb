@@ -103,7 +103,7 @@ module LogTools
         end
         @converters = Array.new
 
-        attr_accessor :pre_fix, :post_fix, :logger, :output_folder
+        attr_accessor :pre_fix, :post_fix, :logger, :output_folder, :streams, :from, :to
 
         #method to register custom converters
         #it is allowed to use deep_cast insight the converter to convert subfields
@@ -117,6 +117,9 @@ module LogTools
             @current_converter = nil
             @post_fix =""
             @pre_fix =""
+            @from = nil
+            @to = nil
+            @streams = Array.new
             @output_folder = "updated"
         end
 
@@ -164,29 +167,46 @@ module LogTools
 
             logfiles.each do |logfile|
                 Converter.info "converting #{logfile}"
-                
+
                 file = Pocolog::Logfiles.open(logfile)
                 output = Pocolog::Logfiles.create(new_file_path(logfile))
                 time = Time.now
                 file.streams.each do |stream|
+                    if(streams && (stream.is_a?(Array) && !streams.include?(stream.name) || streams != stream.name))
+                        #ignore all streams which are not listed if a filter is given
+                        Converter.info "ignoring stream #{stream.name} (#{stream.size} samples)"
+                        next
+                    end
+
                     Converter.info " converting stream #{stream.name} (#{stream.size} samples)"
                     stream_output = nil
                     index = 1
+                    last_ignore = nil
                     stream.samples.each do |lg,rt,sample|
+                        ignore = (from && lg < from) || (to && lg > to)
+                        if last_ignore != ignore
+                            Converter.info "### ignoring samples enabled  ###" if ignore
+                            Converter.info "### ignoring samples disabled ###" if !ignore
+                            last_ignore = ignore
+                        end
+
                         if (Time.now-time).to_f < 1
                             Converter.debug "    #{stream.name}.sample #{index}/#{stream.size}"
                         else
                             time = Time.now
                             Converter.info "    #{stream.name}.sample #{index}/#{stream.size}"
                         end
-                        new_sample = convert_type(sample,lg,time_to,final_registry)
-                        new_sample_class = new_sample.class
-                        #use type_name of the old stream if we have for example a fixnum 
-                        new_sample_class = stream.type_name unless new_sample_class.respond_to? :registry
-                        stream_output ||= output.stream(stream.name,new_sample_class,true)
-                        stream_output.write(lg,rt,new_sample)
+                        if !ignore
+                            new_sample = convert_type(sample,lg,time_to,final_registry)
+                            new_sample_class = new_sample.class
+                            #use type_name of the old stream if we have for example a fixnum 
+                            new_sample_class = stream.type_name unless new_sample_class.respond_to? :registry
+                            stream_output ||= output.stream(stream.name,new_sample_class,true)
+                            stream_output.write(lg,rt,new_sample)
+                        end
                         index += 1
                     end
+                    Converter.info "### ignoring samples disabled ###" if last_ignore
                     Converter.info "    done!"
                 end
                 output.close
@@ -270,7 +290,7 @@ module LogTools
 
             if !dest.is_a?(Typelib::Type) || !src.is_a?(Typelib::Type)
                 raise "Cannot convert #{src.class.name} into #{dest.class.name}. "+
-              "Register a converter which does the conversion"
+                    "Register a converter which does the conversion"
             end
 
             do_not_cast_self = excluded_fields.include?(:self) ? true : false
