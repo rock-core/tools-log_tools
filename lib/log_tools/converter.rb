@@ -34,6 +34,7 @@ module LogTools
             @name = name
             @time_from = time_from
             @new_registry = new_registry
+
             instance_eval(&block)
         end
 
@@ -76,7 +77,12 @@ module LogTools
         end
 
         def conversion(old_type_name,new_type_name=nil,&block) 
-            new_type_name = old_type_name unless new_type_name
+            old_type_name = normalize_name(old_type_name)
+            new_type_name = if new_type_name
+                                normalize_name(new_type_name)
+                            else
+                                old_type_name
+                            end
             raise 'Parameter old_type_name must be of type String' unless old_type_name.is_a? String
             raise 'Parameter new_type_name must be of type String' unless new_type_name.is_a? String
 
@@ -90,7 +96,19 @@ module LogTools
                     raise e
                 end
             end
+
             @name_hash[old_type_name] = SubConverter.new(old_type_name,new_type_name,block)
+        end
+
+        def normalize_name(name)
+            if(name_m = Orocos.master_project.intermediate_type_for(name))
+               LogTools.debug "converting type name #{name} to intermedia type name #{name_m} because #{name} is an opaque type!"
+               name_m.name
+            else
+                name
+            end
+            rescue Typelib::NotFound
+                name
         end
     end
 

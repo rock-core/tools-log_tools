@@ -68,6 +68,7 @@ Examples:
 
     opt.on('--debug') do
         Converter.logger.level = Logger::DEBUG
+        LogTools.logger.level = Logger::DEBUG
     end
 end
 
