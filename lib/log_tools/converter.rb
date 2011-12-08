@@ -121,7 +121,7 @@ module LogTools
         end
         @converters = Array.new
 
-        attr_accessor :pre_fix, :post_fix, :logger, :output_folder, :streams, :from, :to
+        attr_accessor :pre_fix, :post_fix, :logger, :output_folder, :streams, :from, :to, :use_sample_time
 
         #method to register custom converters
         #it is allowed to use deep_cast insight the converter to convert subfields
@@ -138,6 +138,7 @@ module LogTools
             @from = nil
             @to = nil
             @streams = nil
+            @use_sample_time = false
             @output_folder = "updated"
         end
 
@@ -200,6 +201,7 @@ module LogTools
                     stream_output = nil
                     index = 1
                     last_ignore = nil
+                    wrote_warning = !@use_sample_time
                     stream.samples.each do |lg,rt,sample|
                         ignore = (from && lg < from) || (to && lg > to)
                         if last_ignore != ignore
@@ -220,7 +222,15 @@ module LogTools
                             #use type_name of the old stream if we have for example a fixnum 
                             new_sample_class = stream.type_name unless new_sample_class.respond_to? :registry
                             stream_output ||= output.stream(stream.name,new_sample_class,true)
-                            stream_output.write(lg,rt,new_sample)
+                            if(@use_sample_time && (new_sample.respond_to? :time))
+                                stream_output.write(new_sample.time,rt,new_sample)
+                            else
+                                if(@use_sample_time && !wrote_warning)
+                                    Converter.info "Warning: stream #{stream.name} has not field 'time' falling back to system time"
+                                    wrote_warning = true
+                                end
+                                stream_output.write(lg,rt,new_sample)
+                            end
                         end
                         index += 1
                     end

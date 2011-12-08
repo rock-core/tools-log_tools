@@ -66,6 +66,10 @@ Examples:
         end
     end
 
+    opt.on('--use_sample_time', 'Uses the \'time\' field of the sample (if present) as timestamp of the data sample in the log file') do 
+        converter.use_sample_time = true
+    end
+
     opt.on('--debug') do
         Converter.logger.level = Logger::DEBUG
         LogTools.logger.level = Logger::DEBUG
