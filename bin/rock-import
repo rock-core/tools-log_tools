@@ -1,0 +1,49 @@
+#! /usr/bin/env ruby
+
+require 'optparse'
+require 'log_tools/converter.rb'
+
+Orocos.initialize
+build_index = false
+
+parser = OptionParser.new do |opt|
+    opt.banner = <<-EOT
+
+usage: rock-import <folder>
+    
+    Imports logfiles by converting them to a version which can be replayed on the current system.
+    !!! At the moment only building an index for all logfiles in the given folder is implemented !!!
+    
+Examples:
+ rock-import folder
+
+    EOT
+
+    opt.on('--help') do
+        puts parser
+        exit 0
+    end
+    opt.on('-i', '--index', 'Build an index for all logfiles in the given folder. This speeds up loading logfiles.') do
+        build_index = true
+    end
+end
+
+remaining = parser.parse(ARGV)
+if remaining.empty?
+    puts parser
+    exit(1)
+end
+
+puts "building an index for all logfiles in the directory: #{remaining}."
+if build_index
+    Dir.foreach(remaining.first) do |file|
+        if file =~ /\d.log$/
+            begin 
+                log_file = Pocolog::Logfiles.open(file)
+                log_file.streams
+            rescue
+                puts "cannot open file #{file}"
+            end
+        end
+    end
+end
