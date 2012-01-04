@@ -34,7 +34,7 @@ Examples:
     EOT
 
     opt.on('--help') do
-        puts self
+        puts parser
         exit 0
     end
     opt.on('-p', '--postfix POSTFIX', 'Postfix which is added to the input file name to produce the output file name.') do |p|
