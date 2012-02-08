@@ -271,7 +271,7 @@ module LogTools
                         rescue Typelib::NotFound => e
                             #try to load typekit if @current_registry == Orocos.registry
                             if @current_registry == Orocos.registry
-                                Orocos.load_typekit_for sample.class.name
+                                Orocos.load_typekit_for sample.class.name, false
                                 new_sample = @current_registry.get(sample.class.name).new
                             else
                                 raise e
@@ -294,7 +294,7 @@ module LogTools
                 begin
                     new_sample = @current_registry.get(sample.class.name).new
                 rescue Typelib::NotFound => e
-                    Orocos.load_typekit_for sample.class.name
+                    Orocos.load_typekit_for sample.class.name, false 
                     new_sample = @current_registry.get(sample.class.name).new
                 end
                 deep_cast(new_sample,sample)
