@@ -291,7 +291,12 @@ module LogTools
             if @current_registry != final_registry
                 @current_converter = nil
                 @current_registry = final_registry
-                new_sample = @current_registry.get(sample.class.name).new
+                begin
+                    new_sample = @current_registry.get(sample.class.name).new
+                rescue Typelib::NotFound => e
+                    Orocos.load_typekit_for sample.class.name
+                    new_sample = @current_registry.get(sample.class.name).new
+                end
                 deep_cast(new_sample,sample)
                 sample = new_sample
             end
