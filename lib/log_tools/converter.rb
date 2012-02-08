@@ -217,6 +217,8 @@ module LogTools
                             Converter.info "    #{stream.name}.sample #{index}/#{stream.size}"
                         end
                         if !ignore
+			    # Undo any custom convertions that typelib might have applied
+			    sample = Typelib.from_ruby(sample, stream.type)
                             new_sample = convert_type(sample,lg,time_to,final_registry)
                             new_sample_class = new_sample.class
                             #use type_name of the old stream if we have for example a fixnum 
