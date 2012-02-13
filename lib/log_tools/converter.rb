@@ -352,7 +352,7 @@ module LogTools
                         else
                             dst_element = src_element
                         end
-                        dest.insert dst_element
+                        dest.push dst_element
                     end
                 elsif src_type < Typelib::CompoundType
                     Converter.debug "deep cast2 for #{src_type}" if @@message
@@ -390,6 +390,10 @@ module LogTools
                                 dest.raw_set_field(field_name,src.raw_get_field(field_name))
                             end
                         end
+                    end
+                elsif src.respond_to? :each_with_index
+                    src.each_with_index do |sample,index|
+                        deep_cast(dest[index],sample)
                     end
                 else
                     raise ArgumentError, "cannot deep cast #{src_type} into #{dest_type}"
