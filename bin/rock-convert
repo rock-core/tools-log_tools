@@ -86,8 +86,14 @@ if remaining.empty?
     exit(1)
 end
 
-time = Time.now
-converter.convert remaining
-puts 
-puts "all done in #{Time.now-time} seconds!"
-puts 
+begin
+    time = Time.now
+    converter.convert remaining
+    puts 
+    puts "all done in #{Time.now-time} seconds!"
+    puts 
+rescue Interrupt
+    puts
+    puts "Interrupted"
+    puts
+end
