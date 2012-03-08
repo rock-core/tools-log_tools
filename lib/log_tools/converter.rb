@@ -162,6 +162,9 @@ module LogTools
         #given time. The current Orocos.registry must have 
         #the same type version !!!
         def convert(*logfiles)
+            if @use_sample_time && !@use_sample_time.respond_to?(:to_sym)
+                @use_sample_time = :time
+            end
 
             #create folder if given
             if output_folder && !File.directory?(output_folder)
@@ -224,11 +227,11 @@ module LogTools
                             #use type_name of the old stream if we have for example a fixnum 
                             new_sample_class = stream.type_name unless new_sample_class.respond_to? :registry
                             stream_output ||= output.stream(stream.name,new_sample_class,true)
-                            if(@use_sample_time && (new_sample.respond_to? :time))
+                            if(@use_sample_time && (new_sample.respond_to? @use_sample_time))
                                 stream_output.write(new_sample.time,rt,new_sample)
                             else
                                 if(@use_sample_time && !wrote_warning)
-                                    Converter.info "Warning: stream #{stream.name} has not field 'time' falling back to system time"
+                                    Converter.warn "stream #{stream.name} has no field '#{@use_sample_time}' falling back to the logfile time"
                                     wrote_warning = true
                                 end
                                 stream_output.write(lg,rt,new_sample)

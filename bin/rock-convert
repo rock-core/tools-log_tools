@@ -66,8 +66,12 @@ Examples:
         end
     end
 
-    opt.on('--use_sample_time', 'Uses the \'time\' field of the sample (if present) as timestamp of the data sample in the log file') do 
-        converter.use_sample_time = true
+    opt.on('--use_sample_time[=FIELD]', String, 'Uses the \'time\' field of the sample (if present) as timestamp of the data sample in the log file') do |fieldname|
+        Converter.warn "--use_sample_time is deprecated. Use --use-sample-time instead"
+        converter.use_sample_time = (fieldname || :time).to_sym
+    end
+    opt.on('--use-sample-time[=FIELD]', String, 'Uses the \'time\' field of the sample (if present) as timestamp of the data sample in the log file') do |fieldname|
+        converter.use_sample_time = (fieldname || :time).to_sym
     end
 
     opt.on('--debug') do
