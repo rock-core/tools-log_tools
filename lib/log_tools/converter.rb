@@ -205,7 +205,7 @@ module LogTools
                     index = 1
                     last_ignore = nil
                     wrote_warning = !@use_sample_time
-                    stream.samples.each do |lg,rt,sample|
+                    stream.samples.each do |rt,lg,sample|
                         ignore = (from && lg < from) || (to && lg > to)
                         if last_ignore != ignore
                             Converter.info "### ignoring samples enabled  ###" if ignore
@@ -222,19 +222,19 @@ module LogTools
                         if !ignore
 			    # Undo any custom convertions that typelib might have applied
 			    sample = Typelib.from_ruby(sample, stream.type)
-                            new_sample = convert_type(sample,lg,time_to,final_registry)
+                            new_sample = convert_type(sample,rt,time_to,final_registry)
                             new_sample_class = new_sample.class
                             #use type_name of the old stream if we have for example a fixnum 
                             new_sample_class = stream.type_name unless new_sample_class.respond_to? :registry
                             stream_output ||= output.stream(stream.name,new_sample_class,true)
                             if(@use_sample_time && (new_sample.respond_to? @use_sample_time))
-                                stream_output.write(new_sample.time,rt,new_sample)
+                                stream_output.write(rt,new_sample.get_field(@use_sample_time),new_sample)
                             else
                                 if(@use_sample_time && !wrote_warning)
                                     Converter.warn "stream #{stream.name} has no field '#{@use_sample_time}' falling back to the logfile time"
                                     wrote_warning = true
                                 end
-                                stream_output.write(lg,rt,new_sample)
+                                stream_output.write(rt,lg,new_sample)
                             end
                         end
                         index += 1
