@@ -16,6 +16,24 @@ module Kernel
     end
 end
 
+# EXAMPLE How to use the Converter:
+#
+# require 'orocos'
+# require 'log_tools/converter'
+# Orocos.initialize
+#
+# converter = LogTools::Converter.new
+# converter.register "RigidBody",Time.new do 
+#     conversion "/base/samples/RigidBodyState","/base/samples/RigidBodyState" do |dest,src| 
+#         deep_cast(dest,src,:position,:self)
+#         dest.position[0] = p[0]
+#         dest.position[1] = p[1]
+#         dest.position[2] = p[2]
+#     end
+# end
+#
+# converter.convert(ARGV)
+
 module LogTools
     extend Logger::Root('LogTools', Logger::INFO)
 
