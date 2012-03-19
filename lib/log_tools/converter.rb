@@ -38,19 +38,20 @@ module LogTools
     extend Logger::Root('LogTools', Logger::INFO)
 
     class TypeConverter 
-        attr_reader :time_from,:new_registry,:name
+        attr_reader :time_to,:new_registry,:name
         SubConverter = Struct.new(:old_type_name,:new_type_name,:block) 
 
-        def initialize(name,time_from,new_registry=Orocos.registry,&block)
-            return time_from if time_from.is_a? TypeConverter
+        #time_to is the time after which the conversion is no longer needed 
+        def initialize(name,time_to,new_registry=Orocos.registry,&block)
+            return time_to if time_to.is_a? TypeConverter
 
             #check parameter
-            raise 'Parameter time_from must be of type Time' unless time_from.is_a? Time
+            raise 'Parameter time_to must be of type Time' unless time_to.is_a? Time
             raise 'Parameter new_registry must be of type Typelib::Registry' unless new_registry.is_a? Typelib::Registry
 
             @name_hash = Hash.new
             @name = name
-            @time_from = time_from
+            @time_to = time_to
             @new_registry = new_registry
 
             instance_eval(&block)
@@ -95,32 +96,27 @@ module LogTools
         end
 
         def conversion(old_type_name,new_type_name=nil,&block) 
-            old_type_name = normalize_name(old_type_name)
             new_type_name = if new_type_name
-                                normalize_name(new_type_name)
+                                new_type_name
                             else
                                 old_type_name
                             end
-            raise 'Parameter old_type_name must be of type String' unless old_type_name.is_a? String
-            raise 'Parameter new_type_name must be of type String' unless new_type_name.is_a? String
 
-            begin 
-                new_registry.get(new_type_name) #typelib is raising an error if not
-            rescue Typelib::NotFound => e
-                # try to solve the problem by loading a typekit
-                if new_registry == Orocos.registry
-                    Orocos.load_typekit_for new_type_name
-                else
-                    raise e
-                end
+            if !new_registry.include?(new_type_name) && new_registry == Orocos.registry
+                Converter.info "load typekit for  #{new_type_name}"
+                Orocos.load_typekit_for new_type_name
             end
 
+            old_type_name = normalize_name(old_type_name)
+            new_type_name = normalize_name(new_type_name)
+            raise 'Parameter old_type_name must be of type String' unless old_type_name.is_a? String
+            raise 'Parameter new_type_name must be of type String' unless new_type_name.is_a? String
             @name_hash[old_type_name] = SubConverter.new(old_type_name,new_type_name,block)
         end
 
         def normalize_name(name)
             if(name_m = Orocos.master_project.intermediate_type_for(name))
-               LogTools.debug "converting type name #{name} to intermedia type name #{name_m} because #{name} is an opaque type!"
+               Converter.info "#{name} is an intermedia type called #{name_m}"
                name_m.name
             else
                 name
@@ -145,7 +141,7 @@ module LogTools
         #it is allowed to use deep_cast insight the converter to convert subfields
         def self.register(*parameter,&block)
             @converters << TypeConverter.new(*parameter,&block)
-            @converters.sort!{|a,b| a.time_from <=> b.time_from}
+            @converters.sort!{|a,b| a.time_to <=> b.time_to}
         end
 
         def initialize
@@ -162,7 +158,7 @@ module LogTools
 
         def register(*parameter,&block)
             @converters << TypeConverter.new(*parameter,&block)
-            @converters.sort!{|a,b| a.time_from <=> b.time_from}
+            @converters.sort!{|a,b| a.time_to <=> b.time_to}
         end
 
         #creates a file path for a new file based on the old file path
@@ -272,7 +268,7 @@ module LogTools
         #the final_registry must have a compatible version!!!
         def convert_type(sample,time_from,time_to=Time.now,final_registry=Orocos.registry)
             raise 'No time periode is given!!!' unless time_from && time_to
-            _converters = @converters.map{|c|(c.time_from>=time_from && c.time_from <= time_to) ? c : nil }
+            _converters = @converters.map{|c|(c.time_to>=time_from && c.time_to <= time_to) ? c : nil }
             _converters.compact!
             if !_converters.empty?
                 _converters.each_with_index do |c,index|
@@ -397,7 +393,7 @@ module LogTools
                             if @current_converter && @current_converter.convert?(src_field_type.name)
                                 dest.raw_set_field(field_name,@current_converter.new_sample_for(src_field_type.name))
                             end
-                            excluded_fields2 = excluded_fields.map{|field| field.match("#{field_name}\.(.*)");$1}.compact
+                            excluded_fields2 = excluded_fields.map{|field| field.to_s.match("#{field_name}\.(.*)");$1}.compact
                             deep_cast(dest.raw_get_field(field_name), src_value,excluded_fields2)
                         else
                             #check if the value has to be converted 
@@ -421,6 +417,9 @@ module LogTools
                 end
             end
             dest
+        rescue SystemStackError => e
+            Converter.error "Stack level to deep. Have you called deep_cast from your converter #{@current_converter.name} for type #{dest.class.name} and forgot to exclude :self?"
+            exit(1)
         end
     end
 end
