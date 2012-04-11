@@ -164,9 +164,9 @@ module LogTools
         #creates a file path for a new file based on the old file path
         def new_file_path(old_file_path)
             if File.directory?(output_folder)
-                File.join(output_folder,pre_fix+File.basename(old_file_path,".log")+post_fix)
+                File.join(output_folder,pre_fix+File.basename(old_file_path,".log")+post_fix+".log")
             else
-                File.join(File.dirname(old_file_path),pre_fix+File.basename(old_file_path,".log")+post_fix)
+                File.join(File.dirname(old_file_path),pre_fix+File.basename(old_file_path,".log")+post_fix+".log")
             end
         end
 
@@ -205,7 +205,11 @@ module LogTools
                 Converter.info "converting #{logfile}"
 
                 file = Pocolog::Logfiles.open(logfile)
-                output = Pocolog::Logfiles.create(new_file_path(logfile))
+                #we have to create the log file manually because we do not want to 
+                #use the automatically applied file name logic
+                output = Pocolog::Logfiles.new(Typelib::Registry.new)
+                output.new_file(new_file_path(logfile))
+                
                 time = Time.now
                 file.streams.each do |stream|
                     if(streams && (streams.is_a?(Array) && !streams.include?(stream.name) || streams != stream.name))
