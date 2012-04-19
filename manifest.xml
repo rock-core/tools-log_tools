@@ -10,6 +10,7 @@
     <license>GPL v2 or later</license>
     <url>http://rock-robotics.org</url>
 
+    <depend package="utilrb" />
     <depend package="orogen" />
     <depend package="tools/pocolog" />
 </package>
