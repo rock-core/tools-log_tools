@@ -218,7 +218,8 @@ module LogTools
                         next
                     end
 
-                    Converter.info " converting stream #{stream.name} (#{stream.size} samples)"
+                    Converter.info " converting stream #{stream.name} (#{stream.size} samples)" + 
+			(@use_sample_time ? " using :#{@use_sample_time} field as time source" : "")
                     stream_output = nil
                     index = 1
                     last_ignore = nil
@@ -246,7 +247,9 @@ module LogTools
                             new_sample_class = stream.type_name unless new_sample_class.respond_to? :registry
                             stream_output ||= output.stream(stream.name,new_sample_class,true)
                             if(@use_sample_time && (new_sample.respond_to? @use_sample_time))
-                                stream_output.write(rt,new_sample.get_field(@use_sample_time),new_sample)
+				sample_time = new_sample.get_field(@use_sample_time)
+				puts "rt: #{rt} lg: #{lg} st: #{sample_time}"
+                                stream_output.write(rt,sample_time,new_sample)
                             else
                                 if(@use_sample_time && !wrote_warning)
                                     Converter.warn "stream #{stream.name} has no field '#{@use_sample_time}' falling back to the logfile time"
