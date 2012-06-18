@@ -7,7 +7,8 @@ require 'pocolog'
 # @param [String] reference_stream_name the name of the reference stream
 # @param [String] folder the path to the folder containing all log files
 # @param [String] new_file_name path of the new log file 
-def selective_copy(reference_stream_name,folder,new_file_name)
+# @param [Array] black_list list of stream names which shall be ignored
+def selective_copy(reference_stream_name,folder,new_file_name,black_list = Array.new)
     folder = File.expand_path(folder)
     all_files = Dir.enum_for(:glob, File.join(folder, '*.*.log'))
 
@@ -16,6 +17,7 @@ def selective_copy(reference_stream_name,folder,new_file_name)
     logfiles = all_files.map do |file|
         file = Pocolog::Logfiles.new(File.open(file))
         file.streams.each do |stream|
+            next if black_list.include?(stream.name)
             intervals << stream.time_interval if stream.name == reference_stream_name
             streams << stream
         end
@@ -68,11 +70,11 @@ def compact_intevals(intervals)
     intervals
 end
 
-if ARGV.size != 3 
+if ARGV.size < 3 
     puts "Wrong number of arguments"
     puts "Copies all log samples lying insight a log interval of the reference stream to the new log file."
     puts ""
     puts "call_seq: sel_copy reference_stream folder new.log"
 else
-    selective_copy ARGV[0],ARGV[1],ARGV[2]
+    selective_copy ARGV[0],ARGV[1],ARGV[2],ARGV[3..-1]
 end
