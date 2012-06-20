@@ -248,7 +248,6 @@ module LogTools
                             stream_output ||= output.stream(stream.name,new_sample_class,true)
                             if(@use_sample_time && (new_sample.respond_to? @use_sample_time))
 				sample_time = new_sample.get_field(@use_sample_time)
-				puts "rt: #{rt} lg: #{lg} st: #{sample_time}"
                                 stream_output.write(rt,sample_time,new_sample)
                             else
                                 if(@use_sample_time && !wrote_warning)
