@@ -241,7 +241,13 @@ module LogTools
                         if !ignore
 			    # Undo any custom convertions that typelib might have applied
 			    sample = Typelib.from_ruby(sample, stream.type)
-                            new_sample = convert_type(sample,rt,time_to,final_registry)
+                            begin
+                                new_sample = convert_type(sample,rt,time_to,final_registry)
+                            rescue Orocos::TypekitTypeNotFound => e
+                                Converter.warn "skipping stream #{stream.name} due to a missing type definition #{sample.type.name} in the orocos registry."
+                                break
+                            end
+
                             new_sample_class = new_sample.class
                             #use type_name of the old stream if we have for example a fixnum 
                             new_sample_class = stream.type_name unless new_sample_class.respond_to? :registry
