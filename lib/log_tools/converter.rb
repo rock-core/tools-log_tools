@@ -244,7 +244,7 @@ module LogTools
                             begin
                                 new_sample = convert_type(sample,rt,time_to,final_registry)
                             rescue Orocos::TypekitTypeNotFound => e
-                                Converter.warn "skipping stream #{stream.name} due to a missing type definition #{sample.type.name} in the orocos registry."
+                                Converter.warn "skipping stream #{stream.name} due to a missing type definition #{sample.class.name} in the orocos registry."
                                 break
                             end
 
