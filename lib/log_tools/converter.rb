@@ -135,7 +135,7 @@ module LogTools
         end
         @converters = Array.new
 
-        attr_accessor :pre_fix, :post_fix, :logger, :output_folder, :streams, :from, :to, :use_sample_time
+        attr_accessor :pre_fix, :post_fix, :logger, :output_folder, :streams, :from, :to, :use_sample_time ,:time_offset
 
         #method to register custom converters
         #it is allowed to use deep_cast insight the converter to convert subfields
@@ -154,6 +154,7 @@ module LogTools
             @streams = nil
             @use_sample_time = false
             @output_folder = "updated"
+            @time_offset = 0
         end
 
         def register(*parameter,&block)
@@ -254,13 +255,13 @@ module LogTools
                             stream_output ||= output.stream(stream.name,new_sample_class,true)
                             if(@use_sample_time && (new_sample.respond_to? @use_sample_time))
 				sample_time = new_sample.get_field(@use_sample_time)
-                                stream_output.write(rt,sample_time,new_sample)
+                                stream_output.write(rt,sample_time+@time_offset,new_sample)
                             else
                                 if(@use_sample_time && !wrote_warning)
                                     Converter.warn "stream #{stream.name} has no field '#{@use_sample_time}' falling back to the logfile time"
                                     wrote_warning = true
                                 end
-                                stream_output.write(rt,lg,new_sample)
+                                stream_output.write(rt,lg+@time_offset,new_sample)
                             end
                         end
                         index += 1

@@ -74,6 +74,10 @@ Examples:
         converter.use_sample_time = (fieldname || :time).to_sym
     end
 
+    opt.on('--time-offset SECONDS', String, 'Number of seconds the log time is shifted') do |seconds|
+        converter.time_offset = seconds.to_f
+    end
+
     opt.on('--debug') do
         Converter.logger.level = Logger::DEBUG
         LogTools.logger.level = Logger::DEBUG
