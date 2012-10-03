@@ -156,7 +156,9 @@ module LogTools
                             Exporter.info "    #{stream.name}.sample #{index+1}/#{stream.size}"
                         end
 
-                        file = generate_filename(self.filename,stream.name,index)
+                        temp_index = index.to_s
+                        temp_index = "0"*(stream.size.to_s.size-temp_index.size)+temp_index
+                        file = generate_filename(self.filename,stream.name,temp_index)
                         file = File.join(output_folder,filename) if output_folder
 
                         # Undo any custom convertions that typelib might have applied
