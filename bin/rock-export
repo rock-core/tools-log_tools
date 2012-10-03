@@ -1,0 +1,78 @@
+#! /usr/bin/env ruby
+
+require 'optparse'
+require 'log_tools/exporter.rb'
+
+Orocos.initialize
+
+#load all conversions
+if ENV['ROCK_PREFIX']
+    path = File.join(ENV['ROCK_PREFIX'],'log','export')
+    require_dir path if File.directory? path
+end
+
+include LogTools
+Exporter.logger.level = Logger::INFO
+exporter = Exporter.new
+
+parser = OptionParser.new do |opt|
+    opt.banner = <<-EOT
+
+usage: rock-export log_file.log --filename "$STREAM_$INDEX.png" .
+    
+    Exports samples stored in a logfile to a different file formats.
+    
+Examples:
+ rock-export log_file.log --stream camera.frame --start 0 --end 100 --filename "$STREAM_$INDEX.png" .
+
+    EOT
+
+    opt.on('--help', 'Displays this help') do
+        puts parser
+        exit 0
+    end
+    opt.on('--stream STREAM_NAME', 'Name of the stream which shall be exported. If no one is specified all streams of the logfile are selected.') do |stream|
+        exporter.stream_name = stream
+    end
+    opt.on('--type TYPE_NAME', 'Name of the stream type which shall be exported. If no one is specified all streams of the logfile are selected.') do |type|
+        exporter.stream_type = type
+    end
+    opt.on('--start START_INDEX', 'Index of the first sample of the stream which shall be exported [Default = 0]') do |index|
+        exporter.start_index = index.to_i
+    end
+    opt.on('--end END_INDEX', 'Index of the last sample of the stream which shall be exported [Default = -1]') do |index|
+        exporter.end_index = index.to_i
+    end
+    opt.on('--filename FILENAME', 'Filename of the exported sample. Placeholder: $INDEX = index of the current sample, $STREAM = stream name of the current stream.') do |filename|
+        exporter.filename = filename
+    end
+    opt.on('--exporter EXPORTER_NAME', 'Name of the exporter which shall be used. If no one is specified, the exporter is determined by the suffix of the filename and the stream type.') do |name|
+        exporter.exporter_name = name
+    end
+    opt.on('--list', 'Lists all available exporter') do
+        ExporterBase.exporters.each do |exp|
+            pp exp
+            puts
+        end
+        exit 0
+    end
+end
+
+remaining = parser.parse(ARGV)
+if remaining.empty?
+    puts parser
+    exit(1)
+end
+
+#check if parameters are ok
+if exporter.filename == nil
+    puts "no filename is given"
+    exit 1
+end
+
+if nil == (exporter.filename =~ /\..*$/)
+    puts "filename must have a suffix"
+    exit 1
+end
+
+exporter.export(remaining)
