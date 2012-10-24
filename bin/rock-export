@@ -18,7 +18,7 @@ exporter = Exporter.new
 parser = OptionParser.new do |opt|
     opt.banner = <<-EOT
 
-usage: rock-export log_file.log --filename "$STREAM_$INDEX.png" .
+usage: rock-export log_file.log --filename "#STREAM_#INDEX.png" .
     
     Exports samples stored in a logfile to a different file formats.
     

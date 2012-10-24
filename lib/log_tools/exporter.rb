@@ -93,6 +93,7 @@ module LogTools
         end
 
         def initialize
+	    @filename = "#STREAM_#INDEX.png"
         end
 
         def find_exporter(stream,filename,exporter_name=nil)
