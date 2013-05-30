@@ -111,9 +111,14 @@ module LogTools
             end
         end
 
-        def generate_filename(pattern,stream_name,sample_index)
+        def generate_filename(pattern,stream_name,sample_index,rt)
             name = pattern.gsub("#STREAM",stream_name)
-            name.gsub("#INDEX",sample_index.to_s)
+            name = name.gsub("#INDEX",sample_index.to_s)
+            name = if !!(name =~ /#TIME/)
+                       name.gsub("#TIME",Time.at(rt).strftime("%Y_%m_%d_%H_%M_%S_%L"))
+                   else
+                       name
+                   end
         end
 
         def export(*logfiles)
@@ -159,7 +164,7 @@ module LogTools
 
                         temp_index = index.to_s
                         temp_index = "0"*(stream.size.to_s.size-temp_index.size)+temp_index
-                        file = generate_filename(self.filename,stream.name,temp_index)
+                        file = generate_filename(self.filename,stream.name,temp_index,rt)
                         file = File.join(output_folder,filename) if output_folder
 
                         # Undo any custom convertions that typelib might have applied

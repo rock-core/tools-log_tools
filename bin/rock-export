@@ -43,7 +43,7 @@ Examples:
     opt.on('--end END_INDEX', 'Index of the last sample of the stream which shall be exported [Default = -1]') do |index|
         exporter.end_index = index.to_i
     end
-    opt.on('--filename FILENAME', 'Filename of the exported sample. Placeholder: $INDEX = index of the current sample, $STREAM = stream name of the current stream.') do |filename|
+    opt.on('--filename FILENAME', 'Filename of the exported sample. Placeholder: $INDEX = index of the current sample, $STREAM = stream name of the current stream, $TIME = log time of the sample') do |filename|
         exporter.filename = filename
     end
     opt.on('--exporter EXPORTER_NAME', 'Name of the exporter which shall be used. If no one is specified, the exporter is determined by the suffix of the filename and the stream type.') do |name|
