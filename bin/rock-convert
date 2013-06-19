@@ -45,7 +45,7 @@ Examples:
         converter.output_folder = o
     end
 
-    opt.on('-s', '--streams STREAMS', 'Stream names which shall be converted. If not given all streams are selected') do |s,streams|
+    opt.on('-s', '--streams STREAMS', Array, 'Stream names which shall be converted. If not given all streams are selected') do |s|
         converter.streams = s
     end
 

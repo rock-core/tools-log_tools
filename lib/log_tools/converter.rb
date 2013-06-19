@@ -213,7 +213,7 @@ module LogTools
                 
                 time = Time.now
                 file.streams.each do |stream|
-                    if(streams && (streams.is_a?(Array) && !streams.include?(stream.name) || streams != stream.name))
+                    if(streams && (streams.is_a?(Array) && !streams.include?(stream.name)) || (!streams.is_a?(Array) && streams != stream.name))
                         #ignore all streams which are not listed if a filter is given
                         Converter.info "ignoring stream #{stream.name} (#{stream.size} samples)"
                         next
