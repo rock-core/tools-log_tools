@@ -151,10 +151,14 @@ module LogTools
             @pre_fix =""
             @from = nil
             @to = nil
-            @streams = nil
+            @streams = []
             @use_sample_time = false
             @output_folder = "updated"
             @time_offset = 0
+        end
+
+        def streams=(streams)
+            @streams = Array(streams)
         end
 
         def register(*parameter,&block)
@@ -213,7 +217,7 @@ module LogTools
                 
                 time = Time.now
                 file.streams.each do |stream|
-                    if(streams && (streams.is_a?(Array) && !streams.include?(stream.name)) || (!streams.is_a?(Array) && streams != stream.name))
+                    if !streams.empty? && !streams.include?(stream.name)
                         #ignore all streams which are not listed if a filter is given
                         Converter.info "ignoring stream #{stream.name} (#{stream.size} samples)"
                         next
