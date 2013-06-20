@@ -429,6 +429,10 @@ module LogTools
                     src.each_with_index do |sample,index|
                         deep_cast(dest[index],sample)
                     end
+                elsif src.kind_of?(Typelib::NumericType) && dest.kind_of?(Typelib::NumericType)
+                    # at the moment typelib cannot handle the conversion therefore 
+                    # convert to and from ruby to do the conversion
+                    Typelib::copy(dest,Typelib::from_ruby(src.to_ruby,dest.class))
                 else
                     raise ArgumentError, "cannot deep cast #{src_type} into #{dest_type}"
                 end
