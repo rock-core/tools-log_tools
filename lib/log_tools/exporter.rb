@@ -113,6 +113,8 @@ module LogTools
 
         def generate_filename(pattern,stream_name,sample_index,rt)
             name = pattern.gsub("#STREAM",stream_name)
+            name = name.gsub(/^\//,'')
+            name = name.gsub('/','_')
             name = name.gsub("#INDEX",sample_index.to_s)
             name = if !!(name =~ /#TIME/)
                        name.gsub("#TIME",Time.at(rt).strftime("%Y_%m_%d_%H_%M_%S_%L"))
@@ -165,7 +167,8 @@ module LogTools
                         temp_index = index.to_s
                         temp_index = "0"*(stream.size.to_s.size-temp_index.size)+temp_index
                         file = generate_filename(self.filename,stream.name,temp_index,rt)
-                        file = File.join(output_folder,filename) if output_folder
+                        file = File.join(output_folder,filename) if output_folder && !output_folder.empty?
+                        file = File.expand_path(file)
 
                         # Undo any custom convertions that typelib might have applied
                         sample = Typelib.from_ruby(sample, stream.type)
