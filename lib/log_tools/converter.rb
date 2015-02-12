@@ -115,7 +115,7 @@ module LogTools
         end
 
         def normalize_name(name)
-            if(name_m = Orocos.master_project.intermediate_type_for(name))
+            if(Orocos.default_loader.resolve_type(name) && name_m = Orocos.default_loader.intermediate_type_for(name))
                Converter.info "#{name} is an intermedia type called #{name_m}"
                name_m.name
             else
