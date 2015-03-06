@@ -13,5 +13,6 @@
     <depend package="utilrb" />
     <depend package="orogen" />
     <depend package="tools/pocolog" />
+    <test_depend package="flexmock" />
 </package>
 
