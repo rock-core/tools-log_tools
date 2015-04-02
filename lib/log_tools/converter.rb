@@ -256,7 +256,7 @@ module LogTools
                             new_sample_class = new_sample.class
                             #use type_name of the old stream if we have for example a fixnum 
                             new_sample_class = stream.type_name unless new_sample_class.respond_to? :registry
-                            stream_output ||= output.stream(stream.name,new_sample_class,true)
+                            stream_output ||= output.create_stream(stream.name,new_sample_class,stream.metadata)
                             if(@use_sample_time && (new_sample.respond_to? @use_sample_time))
 				sample_time = new_sample.get_field(@use_sample_time)
                                 stream_output.write(rt,sample_time+@time_offset,new_sample)
