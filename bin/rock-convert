@@ -12,6 +12,7 @@ if ENV['ROCK_PREFIX']
 end
 
 include LogTools
+
 Converter.logger.level = Logger::INFO
 converter = Converter.new
 converter.post_fix = ""
@@ -76,6 +77,21 @@ Examples:
 
     opt.on('--time-offset SECONDS', String, 'Number of seconds the log time is shifted') do |seconds|
         converter.time_offset = seconds.to_f
+    end
+
+    opt.on('--converter FILE', String, 'Optional ruby file defining custom conversion') do |file|
+        begin
+            require File.expand_path(file)
+            converter.reload_converter
+        rescue Exception => e
+            LogTools.warn "Cannot register converter #{file}: #{e}."
+        end
+        # EXAMPLE:
+        #    LogTools::Converter.register "converter for base type sonar scan", Time.now,Orocos.registry do
+        #        conversion "/base/samples/SonarScan","/base/samples/SonarBeam" do |dst,src|
+        #            deep_cast(dst,src)
+        #        end
+        #     end
     end
 
     opt.on('--debug') do

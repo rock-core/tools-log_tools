@@ -145,7 +145,6 @@ module LogTools
         end
 
         def initialize
-            @converters = Converter.converters.clone
             @current_converter = nil
             @post_fix =""
             @pre_fix =""
@@ -155,6 +154,11 @@ module LogTools
             @use_sample_time = false
             @output_folder = "updated"
             @time_offset = 0
+            reload_converter
+        end
+
+        def reload_converter
+            @converters = Converter.converters.clone
         end
 
         def streams=(streams)
