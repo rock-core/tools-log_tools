@@ -1,0 +1,6 @@
+To use the examples call:
+
+* source env.sh located in the rock installation
+* call the following command
+
+rock-convert --converter 'EXAMPLE_YOU_WANT_TO_USE.rb' LOG_FILE.log
