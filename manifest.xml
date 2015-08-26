@@ -1,6 +1,6 @@
 <package>
     <description brief="ruby library for data post processing">
-        This library allows to post proecess log data (updating log files,...).  
+        This library allows to post process log data (updating log files,...).
     </description>
     <author>Alexander.Duda@dfki.de</author>
     <copyright>
