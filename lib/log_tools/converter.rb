@@ -288,38 +288,31 @@ module LogTools
         #convertes sample to a new type which was valid at time_to
         #the final_registry must have a compatible version!!!
         def convert_type(sample,time_from,time_to=Time.now,final_registry=Orocos.registry)
+            if(sample.is_a?(Fixnum)||sample.is_a?(Float))
+                return sample
+            end
+
             raise 'No time periode is given!!!' unless time_from && time_to
             _converters = @converters.map{|c|(c.time_to>=time_from && c.time_to <= time_to) ? c : nil }
             _converters.compact!
+            sample_was_converted = false
             if !_converters.empty?
                 _converters.each_with_index do |c,index|
                     @current_converter = c
                     #update current_registry
-
-                    new_sample = nil
                     if @current_converter.convert?(sample)
                         Converter.debug "     Using Converter: #{c.name}" 
+                        @current_registry = @current_converter.new_registry
                         new_sample = @current_converter.new_sample_for sample
-                    else
-                        if(sample.is_a?(Fixnum)||sample.is_a?(Float))
-                            return sample
-                        end
-                        begin
-                            new_sample = @current_registry.get(sample.class.name).new
-                        rescue Typelib::NotFound => e
-                            #try to load typekit if @current_registry == Orocos.registry
-                            if @current_registry == Orocos.registry
-                                Orocos.load_typekit_for sample.class.name, false
-                                new_sample = @current_registry.get(sample.class.name).new
-                            else
-                                raise e
-                            end
-                        end
+                        deep_cast(new_sample,sample)
+                        sample = new_sample
+                        sample = Typelib.from_ruby(sample, sample.class)
+                        sample_was_converted = true
                     end
-                    deep_cast(new_sample,sample)
-                    sample = new_sample
                 end
-            else
+            end
+
+            if !sample_was_converted
                 #this can be removed later if typelib is supporting daisy chain 
                 @current_registry = nil         # we have to convert it via deep_cast
             end
@@ -329,6 +322,7 @@ module LogTools
             if @current_registry != final_registry
                 @current_converter = nil
                 @current_registry = final_registry
+                new_sample = nil
                 begin
                     new_sample = @current_registry.get(sample.class.name).new
                 rescue Typelib::NotFound => e
