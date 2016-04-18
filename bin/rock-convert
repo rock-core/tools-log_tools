@@ -94,6 +94,10 @@ Examples:
         #     end
     end
 
+    opt.on('--keep-registry', 'keeps the logfile registry and does not update the samples to the current one') do
+        converter.keep_registry = true
+    end
+
     opt.on('--debug') do
         Converter.logger.level = Logger::DEBUG
         LogTools.logger.level = Logger::DEBUG

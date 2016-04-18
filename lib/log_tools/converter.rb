@@ -135,7 +135,7 @@ module LogTools
         end
         @converters = Array.new
 
-        attr_accessor :pre_fix, :post_fix, :logger, :output_folder, :streams, :from, :to, :use_sample_time ,:time_offset
+        attr_accessor :pre_fix, :post_fix, :logger, :output_folder, :streams, :from, :to, :use_sample_time ,:time_offset,:keep_registry
 
         #method to register custom converters
         #it is allowed to use deep_cast insight the converter to convert subfields
@@ -154,6 +154,7 @@ module LogTools
             @use_sample_time = false
             @output_folder = "updated"
             @time_offset = 0
+            @keep_registry = false
             reload_converter
         end
 
@@ -233,6 +234,7 @@ module LogTools
                     index = 1
                     last_ignore = nil
                     wrote_warning = !@use_sample_time
+                    final_registry = stream.registry if keep_registry
                     stream.samples.each do |rt,lg,sample|
                         ignore = (from && lg < from) || (to && lg > to)
                         if last_ignore != ignore
