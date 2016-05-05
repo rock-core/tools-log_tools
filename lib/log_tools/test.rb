@@ -14,9 +14,11 @@ if ENV['TEST_ENABLE_COVERAGE'] == '1'
 end
 
 require 'log_tools'
-## Uncomment this to enable flexmock
-require 'flexmock/test_unit'
+require 'flexmock/minitest'
+require 'pocolog/test_helpers'
+require 'minitest/autorun'
 require 'minitest/spec'
+FlexMock.partials_are_based = true
 
 if ENV['TEST_ENABLE_PRY'] != '0'
     begin
@@ -37,38 +39,15 @@ module LogTools
     #   end
     #
     module SelfTest
-        if defined? FlexMock
-            include FlexMock::ArgumentTypes
-            include FlexMock::MockContainer
-        end
+        include Pocolog::TestHelpers
 
-        def setup
-            # Setup code for all the tests
-        end
-
-        def teardown
-            if defined? FlexMock
-                flexmock_teardown
-            end
-            super
-            # Teardown code for all the tests
+        def logfile_pathname(basename)
+            Pathname.new(logfile_path(basename))
         end
     end
-end
-
-# Workaround a problem with flexmock and minitest not being compatible with each
-# other (currently). See github.com/jimweirich/flexmock/issues/15.
-if defined?(FlexMock) && !FlexMock::TestUnitFrameworkAdapter.method_defined?(:assertions)
-    class FlexMock::TestUnitFrameworkAdapter
-        attr_accessor :assertions
-    end
-    FlexMock.framework_adapter.assertions = 0
 end
 
 module Minitest
-    class Spec
-        include LogTools::SelfTest
-    end
     class Test
         include LogTools::SelfTest
     end
