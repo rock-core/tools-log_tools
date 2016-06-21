@@ -16,6 +16,8 @@ module LogTools
                 type: :boolean, default: false
             option :skip_failures, desc: 'skip streams that cannot be upgraded',
                 type: :boolean, default: false
+            option :converters, desc: 'apply the converters stored in this path',
+                type: :string
             def process(path)
                 path = Pathname.new(path)
                 if path.directory?
@@ -47,6 +49,10 @@ module LogTools
                     end
                 end
                 upgrader = Pocolog::FileUpgrader.new(type_mapper)
+                if options[:converters]
+                    converters = Pocolog::Upgrade::DSL.load_dir(options[:converters], upgrader.converter_registry)
+                    puts "loaded #{converters.size} converters from #{options[:converters]}"
+                end
                 all_paths.each do |in_path, out_path|
                     if out_path.exist?
                         if options[:skip_existing]
@@ -74,6 +80,41 @@ module LogTools
                         reporter.finish
                     end
                 end
+            end
+
+            desc 'create-converter PATH LOGFILE SOURCE_TYPE [TARGET_TYPE]', 'create a new converter for a type present in a logfile and save it in PATH'
+            def create_converter(output_path, log_file_path, source_type_name, target_type_name = source_type_name)
+                output_path   = Pathname.new(output_path)
+                log_file_path = Pathname.new(log_file_path)
+
+                in_logfile = Pocolog::Logfiles.open(log_file_path)
+                source_type = nil
+                in_logfile.streams.each do |s|
+                    type = s.type
+                    if !source_type && type.registry.include?(source_type_name)
+                        source_type = type.registry.get(source_type_name)
+                        break
+                    end
+                end
+                if !source_type
+                    raise ArgumentError, "#{log_file_path} does not contain a definition for #{source_type_name}"
+                end
+
+                loader = OroGen::Loaders::PkgConfig.new('gnulinux')
+                typekit = loader.typekit_for(target_type_name, false)
+                target_type = typekit.resolve_type(target_type_name)
+
+                reference_time = in_logfile.streams.map { |s| s.time_interval[1] }.compact.max
+                reference_time = reference_time.to_date.next_day
+
+                converter_file, source_tlb, target_tlb = LogTools::Upgrade::DSL.create(
+                    output_path, reference_time, source_type, target_type,
+                    description: "Converter created at #{Time.now} from #{log_file_path.expand_path}")
+
+                puts "created template converter"
+                puts "  source type: #{source_tlb}"
+                puts "  target type: #{target_tlb}"
+                puts "You must edit #{converter_file} and perform the actual conversion"
             end
         end
     end
