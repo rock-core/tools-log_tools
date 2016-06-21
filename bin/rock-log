@@ -1,0 +1,14 @@
+#! /usr/bin/env ruby
+require 'log_tools/cli/main'
+
+begin
+    LogTools::CLI::Main.start(ARGV)
+rescue Interrupt
+rescue Exception => e
+    STDERR.puts
+    PP.pp(e, STDERR)
+    e.backtrace.each do |line|
+        STDERR.puts "  #{line}"
+    end
+end
+
