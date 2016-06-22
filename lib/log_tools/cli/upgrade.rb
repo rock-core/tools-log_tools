@@ -4,6 +4,7 @@ require 'pastel'
 require 'orogen'
 require 'pocolog/file_upgrader'
 require 'pocolog/cli/tty_reporter'
+require 'pocolog/upgrade/dsl'
 
 module LogTools
     module CLI
@@ -18,6 +19,8 @@ module LogTools
                 type: :boolean, default: false
             option :converters, desc: 'apply the converters stored in this path',
                 type: :string
+            option :silent, desc: 'remove all output',
+                type: :boolean, default: false
             def process(path)
                 path = Pathname.new(path)
                 if path.directory?
@@ -33,7 +36,11 @@ module LogTools
                         end
                     end
                 else
-                    output_file = path.sub(/$/, options[:output] || '.upgraded')
+                    output_file =
+                        if options[:output]
+                            Pathname.new(options[:output])
+                        else path.dirname + "upgraded" + path.basename
+                        end
                     all_paths = [[path, output_file]]
                 end
 
@@ -51,7 +58,9 @@ module LogTools
                 upgrader = Pocolog::FileUpgrader.new(type_mapper)
                 if options[:converters]
                     converters = Pocolog::Upgrade::DSL.load_dir(options[:converters], upgrader.converter_registry)
-                    puts "loaded #{converters.size} converters from #{options[:converters]}"
+                    if !options[:silent]
+                        puts "loaded #{converters.size} converters from #{options[:converters]}"
+                    end
                 end
                 all_paths.each do |in_path, out_path|
                     if out_path.exist?
@@ -63,9 +72,17 @@ module LogTools
                         end
                     end
 
-                    puts
-                    puts pastel.bold("processing logfile #{in_path}")
-                    reporter = Pocolog::CLI::TTYReporter.new("|:bar| :current_byte/:total_byte :eta (:byte_rate/s)", total: in_path.stat.size)
+                    if !options[:silent]
+                        puts
+                        puts pastel.bold("processing logfile #{in_path}")
+                    end
+                    reporter =
+                        if options[:silent]
+                            Pocolog::CLI::NullReporter.new
+                        else
+                            Pocolog::CLI::TTYReporter.new("|:bar| :current_byte/:total_byte :eta (:byte_rate/s)", total: in_path.stat.size)
+                        end
+
                     begin
                         out_path.dirname.mkpath
                         upgrader.upgrade(in_path.to_s, out_path.to_s,
@@ -83,6 +100,9 @@ module LogTools
             end
 
             desc 'create-converter PATH LOGFILE SOURCE_TYPE [TARGET_TYPE]', 'create a new converter for a type present in a logfile and save it in PATH'
+            option :date, desc: 'the date until which the converter should apply'
+            option :silent, desc: 'do not display progress output',
+                type: :boolean, default: false
             def create_converter(output_path, log_file_path, source_type_name, target_type_name = source_type_name)
                 output_path   = Pathname.new(output_path)
                 log_file_path = Pathname.new(log_file_path)
@@ -100,21 +120,30 @@ module LogTools
                     raise ArgumentError, "#{log_file_path} does not contain a definition for #{source_type_name}"
                 end
 
-                loader = OroGen::Loaders::PkgConfig.new('gnulinux')
+                loader  = OroGen::Loaders::PkgConfig.new('gnulinux')
                 typekit = loader.typekit_for(target_type_name, false)
                 target_type = typekit.resolve_type(target_type_name)
 
-                reference_time = in_logfile.streams.map { |s| s.time_interval[1] }.compact.max
-                reference_time = reference_time.to_date.next_day
+                if options[:date]
+                    reference_time = Date.parse(options[:date])
+                else
+                    reference_time = in_logfile.streams.map { |s| s.time_interval[1] }.compact.max
+                    if !reference_time
+                        raise ArgumentError, "#{log_file_path} does not have any samples, cannot deduce the reference date. Use --date"
+                    end
+                    reference_time = reference_time.to_date.next_day
+                end
 
-                converter_file, source_tlb, target_tlb = LogTools::Upgrade::DSL.create(
+                converter_file, source_tlb, target_tlb = Pocolog::Upgrade::DSL.create(
                     output_path, reference_time, source_type, target_type,
                     description: "Converter created at #{Time.now} from #{log_file_path.expand_path}")
 
-                puts "created template converter"
-                puts "  source type: #{source_tlb}"
-                puts "  target type: #{target_tlb}"
-                puts "You must edit #{converter_file} and perform the actual conversion"
+                if !options[:silent]
+                    puts "created template converter"
+                    puts "  source type: #{source_tlb}"
+                    puts "  target type: #{target_tlb}"
+                    puts "You must edit #{converter_file} and perform the actual conversion"
+                end
             end
         end
     end
