@@ -82,7 +82,7 @@ module LogTools
         extend Logger::Hierarchy
         extend Logger::Forward
 
-        attr_accessor :output_folder, :stream_name,:stream_type, :filename, :exporter_name ,:start_index, :end_index
+        attr_accessor :output_folder, :stream_name,:stream_type, :filename, :exporter_name ,:start_index, :end_index, :index_increment
 
         def stream_name=(streams)
             @stream_name = Array(streams)
@@ -150,11 +150,20 @@ module LogTools
 
                     exporter = exporter_class.new(stream)
                     index = 0
+                    start_index_local = 0
+                    if start_index
+                        start_index_local = start_index
+                    end
+                    index_increment_local = 1
+                    if index_increment
+                        index_increment_local = index_increment
+                    end
                     time = Time.now
                     Exporter.info " exporting stream #{stream.name} (#{stream.size} samples): "
                     stream.samples.each do |rt,lg,sample|
-                        if start_index && index < start_index
-                            index += 1
+                        # sool forward to the first dataset to be exported
+                        if index < start_index_local
+                            index += 1 
                             next
                         end
                         if (Time.now-time).to_f < 1
@@ -174,6 +183,8 @@ module LogTools
                         sample = Typelib.from_ruby(sample, stream.type)
                         exporter.export(sample,file)
                         index += 1
+                        # modify start_index to skip samples
+                        start_index_local += index_increment_local
                         if end_index && end_index > 0 && index > end_index
                             break
                         end
