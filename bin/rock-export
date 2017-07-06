@@ -43,6 +43,9 @@ Examples:
     opt.on('--end END_INDEX', 'Index of the last sample of the stream which shall be exported [Default = -1]') do |index|
         exporter.end_index = index.to_i
     end
+    opt.on('--increment INDEX_INCREMENT', 'Index increment to be used [Default = 1]') do |increment|
+        exporter.index_increment = increment.to_i
+    end
     opt.on('--filename FILENAME', 'Filename of the exported sample. Placeholder: #INDEX = index of the current sample, #STREAM = stream name of the current stream, #TIME = log time of the sample') do |filename|
         exporter.filename = filename
     end
